@@ -15,17 +15,48 @@
  * @param rows_per_proc The total number of rows present within current process
  * @param num_proc      The total number of processes
  */
-void perform_elimination(int recv_id, int id, int num_eq, double* proc_rows, double* proc_vals, int curr, double* recvd_row, int rows_per_proc, int num_proc) {
+void perform_elimination(int recv_id, int id, int num_eq, double* proc_rows, double* proc_vals, int curr, double* recvd_row, int rows_per_proc, int num_proc, int * var_perm, FILE* debugfp) {
+    /* update indices of each variable, (to be used during back substitution) */
     
-    for(int i = curr / num_proc; i < rows_per_proc; i++) {
-        int piv = recvd_row[num_eq];
-        int tmp = proc_rows[(i * num_eq) + recv_id];
+    /* DEBUG */
+    fprintf(debugfp, "recv_id = %d, id = %d, curr = %d, piv_index = %d, pivot_val = %lf\n", recv_id, id, curr, (int) recvd_row[num_eq], recvd_row[recv_id]);
+    fprintf(debugfp, "BEFORE PROCESSING ELIMINATION\n");
+    for(int i = 0; i < rows_per_proc; i++) {
+        for(int j = 0; j < num_eq; j++) {
+            fprintf(debugfp, " %lf ", proc_rows[(i * num_eq) + j]);
+        }
+        fprintf(debugfp, "\n");
+    }
+    /* DEBUG ENDS */
+    int piv_idx = (int) recvd_row[num_eq];
+    int tmp = var_perm[piv_idx];
+    var_perm[piv_idx] = var_perm[recv_id];
+    var_perm[recv_id] = tmp;
+    
+    for(int i = 0; i < rows_per_proc; i++) {
+        if(i*num_proc + id == recv_id) {
+            continue;
+        }
+        int piv = (int) recvd_row[num_eq];
+        double tmp = proc_rows[(i * num_eq) + recv_id];
         proc_rows[(i*num_eq) + recv_id] = proc_rows[(i*num_eq) + piv];
         proc_rows[(i*num_eq) + piv] = tmp;
-        for(int j = 0; j < num_eq; j++) {
-            proc_rows[(i * num_eq) + j] -= (recvd_row[j] * proc_rows[(i*num_eq) + recv_id]);
+      
+        if(i >= curr / num_proc) {
+            double piv_val = proc_rows[(i*num_eq) + recv_id];
+            for(int j = 0; j < num_eq; j++) {
+                proc_rows[(i * num_eq) + j] -= (recvd_row[j] * piv_val);
+            }
+            proc_vals[i] -= recvd_row[num_eq + 1] * piv_val;
         }
-        proc_vals[i] -= recvd_row[num_eq + 1] * proc_rows[(i*num_eq) + recv_id];
+    }
+
+    fprintf(debugfp, "\nAFTER PROCESSING ELIMINATION\n");
+    for(int i = 0; i < rows_per_proc; i++) {
+        for(int j = 0; j < num_eq; j++) {
+            fprintf(debugfp, " %lf ", proc_rows[(i * num_eq) + j]);
+        }
+        fprintf(debugfp, "\n");
     }
 }
 
@@ -38,16 +69,20 @@ void perform_elimination(int recv_id, int id, int num_eq, double* proc_rows, dou
  *
  * @return The index of the pivot element
  */
-int compute_pivot(int curr, int num_proc, int num_eq, double* proc_rows) {
-    int mx = -1;
+int compute_pivot(int curr, int num_proc, int num_eq, double* proc_rows, FILE* debugfp) {
+    double mx = -1;
     int pivot;
     int row_id = curr / num_proc;
+    fprintf(debugfp, "Computing pivot: curr = %d\n", curr);
     for(int i = curr; i < num_eq; i++) {
-        int val = proc_rows[(row_id * num_eq) + i];
-        if(abs(val) > mx) {
+        double val = proc_rows[(row_id * num_eq) + i];
+        if(val < 0)
+            val *= -1;
+        if(val > mx) {
             mx = abs(val);
             pivot = i;
         }
+        fprintf(debugfp, "val = %lf, pivot = %d\n", val, pivot);
     }
     return pivot;
 }
@@ -62,16 +97,17 @@ int compute_pivot(int curr, int num_proc, int num_eq, double* proc_rows) {
  * @param num_eq    The number of equations in the given systemc_vals The chink of the values vector contained within the current process
  */
 void perform_division(int id, int curr, double* proc_rows, int pivot, int num_proc, int num_eq, int rows_per_proc, double * proc_vals) {
-    
+    /* swapping pivot element with element at pivot index */
     int row_id = curr / num_proc;
-    int tmp = proc_rows[(row_id * num_eq) + pivot]; 
+    double tmp = proc_rows[(row_id * num_eq) + pivot]; 
     proc_rows[(row_id*num_eq)+ pivot] = proc_rows[(row_id*num_eq) + curr];
     proc_rows[(row_id*num_eq) + curr] = tmp;
     
+    double piv_val = proc_rows[(row_id * num_eq) + curr];
     for(int i = curr; i < num_eq; i++) {
-        proc_rows[(row_id*num_eq) + i] /= proc_rows[(row_id * num_eq) + curr];
+        proc_rows[(row_id*num_eq) + i] /= piv_val;
     }
-    proc_vals[row_id] /= proc_rows[(row_id*num_eq) + curr];
+    proc_vals[row_id] /= piv_val;
 }
 
 
@@ -116,6 +152,11 @@ int main(int argc, char** argv) {
         rows_per_proc = rpp;
     else
         rows_per_proc = rpp + 1;
+    
+    int var_perm[num_eq];
+    for(int i = 0; i < num_eq; i++) {
+        var_perm[i] = i;
+    }
     
     if(id == 0) {    
         
@@ -190,7 +231,6 @@ int main(int argc, char** argv) {
     //    }
         // fprintf(debugfp, "\n");
     }
-    fclose(debugfp);
     MPI_Barrier(MPI_COMM_WORLD);
     /* DEBUG ENDS */
     
@@ -208,14 +248,25 @@ int main(int argc, char** argv) {
     MPI_Status st;  
 
     for(int cnt = 0; cnt < rows_per_proc; cnt++) {
+        
         for(int i = prev_curr + 1; i < curr; i++) {
             // pipelined send receive of all rows between previoud row and current row
             MPI_Recv(recvd_row, num_eq + 2, MPI_DOUBLE, prev_proc, i, MPI_COMM_WORLD, &st);
             MPI_Send(recvd_row, num_eq + 2, MPI_DOUBLE, next_proc, i, MPI_COMM_WORLD);
-            perform_elimination(i, id, num_eq, proc_rows, proc_vals, curr, recvd_row, rows_per_proc, num_proc);  // eliminates from current row till last row in process
+            fprintf(debugfp, "\nReceived rows\n");
+            for(int k = 0; k < num_eq + 2; k++) {
+                fprintf(debugfp, "%lf ", recvd_row[k]);
+            }
+            perform_elimination(i, id, num_eq, proc_rows, proc_vals, curr, recvd_row, rows_per_proc, num_proc, var_perm, debugfp);  // eliminates from current row till last row in process
         }
-        piv = compute_pivot(curr, num_proc, num_eq, proc_rows); 
+        piv = compute_pivot(curr, num_proc, num_eq, proc_rows, debugfp); 
+        fprintf(debugfp, "\nPivots\n");
+        fprintf(debugfp, "%d %d\n", curr, piv);
         perform_division(id, curr, proc_rows, piv, num_proc, num_eq, rows_per_proc, proc_vals);
+        fprintf(debugfp, "\nAfter Division Row no. : %d\n", curr);
+        for(int k = 0; k < num_eq + 2; k++) {
+            fprintf(debugfp, "%lf ", proc_rows[cnt*num_eq + k]);
+        }
         double send_buf[num_eq + 2];
         for(int j = 0; j < num_eq; j++) {
             send_buf[j] = proc_rows[(cnt * num_eq) + j];
@@ -233,9 +284,28 @@ int main(int argc, char** argv) {
         curr += num_proc;
         
         if(curr < num_eq) {
-            perform_elimination(prev_curr, id, num_eq, proc_rows, proc_vals, curr, send_buf, rows_per_proc, num_proc);
+            perform_elimination(prev_curr, id, num_eq, proc_rows, proc_vals, curr, send_buf, rows_per_proc, num_proc, var_perm, debugfp);
         }
     }
+    fprintf(debugfp, "\nFinal\n");
+    for(int i = 0; i < rows_per_proc; i++) {
+        for(int j = 0; j < num_eq; j++) {
+            fprintf(debugfp, "%lf ", proc_rows[(i * num_eq) + j]);
+        }
+      fprintf(debugfp, "%lf\n", proc_vals[i]);
+    //    for(int j = 0; j < num_eq; j++) {
+    //        fprintf(debugfp, "%lf ", eq_mat[i][j]);
+    //    }
+        // fprintf(debugfp, "\n");
+    }
+    
+    fprintf(debugfp, "\n\nVariables Permutation:\n");
+    for(int i = 0; i < num_eq; i++) {
+        fprintf(debugfp, "%d ", var_perm[i]);
+    }
+    fprintf(debugfp, "\n");
+    
+    fclose(debugfp);
         
     MPI_Finalize();
     return 0;
