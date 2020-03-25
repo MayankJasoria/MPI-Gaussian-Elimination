@@ -370,7 +370,44 @@ int main(int argc, char** argv) {
     fprintf(debugfp, "\n");
 
     fclose(debugfp);
+    
+    double res[num_eq];
+    
+    int recv_proc = num_eq % num_proc;
+    
+    MPI_Gatherv(proc_vals, rows_per_proc, MPI_DOUBLE, res, divs, displs, MPI_DOUBLE, recv_proc, MPI_COMM_WORLD);
+    
+    if(id == recv_proc) {
+        int k = 0;
+        double solution[num_eq];
         
+        /* arrange data in the sequential format */
+        for(int i = 0; i < num_proc; i++) {
+            for(int j = i; j < num_eq; j += num_proc) {
+                solution[k++] = res[j];
+            }
+        }
+        
+        /* swap data according to the variable permutations */
+        for(int i = 0; i < num_eq; i++) {
+            double temp = solution[i];
+            solution[i] = solution[var_perm[i]];
+            solution[var_perm[i]] = temp;
+        }
+        
+        /* print output */
+        FILE* outfile = fopen("output.txt", "w");
+        fprintf(outfile, "The solution of the system of equations is {\n");
+        for(int i = 0; i < num_eq; i++) {
+            fprintf(outfile, "%lf ", solution[i]);
+        }
+        fprintf(outfile, "}\n");
+        fclose(outfile);
+    }
+      
+    /* Ensuring that MPI_Finalize() is not called prematurely by any process */
+    MPI_Barrier(MPI_COMM_WORLD);  
+     
     MPI_Finalize();
     return 0;
 }

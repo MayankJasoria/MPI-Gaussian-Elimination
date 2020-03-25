@@ -1,0 +1,44 @@
+0.000000 0.000000 1.000000 0.000000 1.000000
+
+Received rows
+1.000000 0.000000 0.000000 0.000000 0.000000 2.000000 recv_id = 0, id = 2, curr = 2, piv_index = 0, pivot_val = 1.000000
+BEFORE PROCESSING ELIMINATION
+ 0.000000  0.000000  1.000000  0.000000 
+
+AFTER PROCESSING ELIMINATION
+ 0.000000  0.000000  1.000000  0.000000 
+
+Received rows
+0.000000 1.000000 0.000000 0.000000 1.000000 3.000000 recv_id = 1, id = 2, curr = 2, piv_index = 1, pivot_val = 1.000000
+BEFORE PROCESSING ELIMINATION
+ 0.000000  0.000000  1.000000  0.000000 
+
+AFTER PROCESSING ELIMINATION
+ 0.000000  0.000000  1.000000  0.000000 
+Computing pivot: curr = 2
+val = 1.000000, pivot = 2
+val = 0.000000, pivot = 2
+
+Pivots
+2 2
+
+After Division Row no. : 2
+0.000000 0.000000 1.000000 0.000000 0.000000 0.000000 prev_lst = 4, lst = 2
+1. x_val = 0.000000, cnt = 0, lst = 2, prev_lst = 4
+2. x_val = 0.000000, cnt = 0, i = 3, lst = 2, prev_lst = 4
+3. x_val = 7.000000, cnt = 0, i = 3, lst = 2, prev_lst = 4
+Proc_vals: 1.000000 0.000000 0.000000 0.000000 
+
+
+Printing PROC VALS
+1.000000 
+
+Final
+0.000000 0.000000 1.000000 0.000000 1.000000
+
+
+Variables Permutation:
+0 1 2 3 
+
+Printing PROC VALS
+1.000000 

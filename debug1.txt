@@ -1,15 +1,12 @@
 0.000000 1.000000 0.000000 0.000000 3.000000
-0.000000 0.000000 0.000000 1.000000 7.000000
 
 Received rows
 1.000000 0.000000 0.000000 0.000000 0.000000 2.000000 recv_id = 0, id = 1, curr = 1, piv_index = 0, pivot_val = 1.000000
 BEFORE PROCESSING ELIMINATION
  0.000000  1.000000  0.000000  0.000000 
- 0.000000  0.000000  0.000000  1.000000 
 
 AFTER PROCESSING ELIMINATION
  0.000000  1.000000  0.000000  0.000000 
- 0.000000  0.000000  0.000000  1.000000 
 Computing pivot: curr = 1
 val = 1.000000, pivot = 1
 val = 0.000000, pivot = 1
@@ -19,52 +16,26 @@ Pivots
 1 1
 
 After Division Row no. : 1
-0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 recv_id = 1, id = 1, curr = 3, piv_index = 1, pivot_val = 1.000000
-BEFORE PROCESSING ELIMINATION
- 0.000000  1.000000  0.000000  0.000000 
- 0.000000  0.000000  0.000000  1.000000 
+0.000000 1.000000 0.000000 0.000000 0.000000 0.000000 prev_lst = 4, lst = 1
+1. x_val = 0.000000, cnt = 0, lst = 1, prev_lst = 4
+2. x_val = 0.000000, cnt = 0, i = 3, lst = 1, prev_lst = 4
+3. x_val = 7.000000, cnt = 0, i = 3, lst = 1, prev_lst = 4
+Proc_vals: 3.000000 0.000000 0.000000 1.000000 
 
-AFTER PROCESSING ELIMINATION
- 0.000000  1.000000  0.000000  0.000000 
- 0.000000  0.000000  0.000000  1.000000 
-
-Received rows
-0.000000 0.000000 1.000000 0.000000 2.000000 1.000000 recv_id = 2, id = 1, curr = 3, piv_index = 2, pivot_val = 1.000000
-BEFORE PROCESSING ELIMINATION
- 0.000000  1.000000  0.000000  0.000000 
- 0.000000  0.000000  0.000000  1.000000 
-
-AFTER PROCESSING ELIMINATION
- 0.000000  1.000000  0.000000  0.000000 
- 0.000000  0.000000  0.000000  1.000000 
-Computing pivot: curr = 3
-val = 1.000000, pivot = 3
-
-Pivots
-3 3
-
-After Division Row no. : 3
-0.000000 0.000000 0.000000 1.000000 0.000000 0.000000 prev_lst = 4, lst = 3
-1. x_val = 0.000000, cnt = 1, lst = 3, prev_lst = 4
-
-Printing PROC VALS
-3.000000 7.000000 
-1. x_val = 0.000000, cnt = 0, lst = 1, prev_lst = 3
-2. x_val = 0.000000, cnt = 0, i = 2, lst = 1, prev_lst = 3
-3. x_val = 1.000000, cnt = 0, i = 2, lst = 1, prev_lst = 3
-Proc_vals: 3.000000 7.000000 0.000000 1.000000 
+2. x_val = 7.000000, cnt = 0, i = 2, lst = 1, prev_lst = 4
+3. x_val = 1.000000, cnt = 0, i = 2, lst = 1, prev_lst = 4
+Proc_vals: 3.000000 0.000000 0.000000 1.000000 
 
 
 Printing PROC VALS
-3.000000 7.000000 
+3.000000 
 
 Final
 0.000000 1.000000 0.000000 0.000000 3.000000
-0.000000 0.000000 0.000000 1.000000 7.000000
 
 
 Variables Permutation:
 0 1 2 3 
 
 Printing PROC VALS
-3.000000 7.000000 
+3.000000 
