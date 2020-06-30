@@ -1,2 +1,11 @@
-The solution of the system of equations is 
-{2.000000 3.000000 1.000000 7.000000 }
+The solution of the system of equations is: 
+x1 = 0.451776 
+x2 = -0.126624 
+x3 = -2.842917 
+x4 = -0.435378 
+x5 = -0.440959 
+x6 = 13.901531 
+x7 = 9.192894 
+x8 = 0.968942 
+x9 = 0.533418 
+x10 = 91.790930 
